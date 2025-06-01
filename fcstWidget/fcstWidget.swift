@@ -12,15 +12,17 @@ import SwiftUI
 func backgroundColor(for imageName: String) -> Color {
     switch imageName {
     case "sunny":
-        return Color.blue.opacity(0.7)       // 하늘색 (밝은 파랑)
+        return Color.blue.opacity(0.7)       // 밝은 파랑
     case "cloudy":
         return Color.gray.opacity(0.7)       // 옅은 회색 (더 연하게)
-    case "rainy":
-        return Color.blue.opacity(0.3)       // 진한 회색 (좀 더 진하게)
+    case "rain":
+        return Color.blue.opacity(0.3)       // 옅은 파란색
     case "snow":
         return Color.white.opacity(0.8)      // 흰색 (약간 투명)
+    case "fog":
+        return Color.gray.opacity(0.7)      // 흰색 (약간 투명)
     default:
-        return Color(.systemBackground)
+        return Color.blue.opacity(0.7)
     }
 }
 
@@ -208,39 +210,39 @@ struct MediumWidgetView: View {
                 // 두 번째 VStack (기온 + 이미지만)
                                VStack {
                                    HStack {
-                                       Text("2h +")
+                                       Text("2h+")
                                        Text(entry.temp2)
                                        Image(entry.image2)
                                            .resizable()
                                            .scaledToFit()
-                                           .frame(height: 30)
+                                           .frame(height: 25)
                                    }
                                    
                                    HStack {
-                                       Text("3h +")
+                                       Text("3h+")
                                        Text(entry.temp3)
                                        Image(entry.image3)
                                            .resizable()
                                            .scaledToFit()
-                                           .frame(height: 30)
+                                           .frame(height: 25)
                                    }
                                    
                                    HStack {
-                                       Text("4h +")
+                                       Text("4h+")
                                        Text(entry.temp4)
                                        Image(entry.image4)
                                            .resizable()
                                            .scaledToFit()
-                                           .frame(height: 30)
+                                           .frame(height: 25)
                                    }
                                    
                                    HStack {
-                                       Text("5h +")
+                                       Text("5h+")
                                        Text(entry.temp5)
                                        Image(entry.image5)
                                            .resizable()
                                            .scaledToFit()
-                                           .frame(height: 30)
+                                           .frame(height: 25)
                                    }
                                }
             }

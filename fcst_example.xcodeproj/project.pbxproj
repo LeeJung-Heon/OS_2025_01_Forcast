@@ -74,13 +74,6 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		040A71A62DCFA53E00A5861B /* Exceptions for "fcst_example" folder in "fcst_example" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 040A717D2DCFA53D00A5861B /* fcst_example */;
-		};
 		0440B8062DE7C80E00709A21 /* Exceptions for "fcstWidget" folder in "fcstWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -88,28 +81,31 @@
 			);
 			target = 0440B7ED2DE7C80D00709A21 /* fcstWidgetExtension */;
 		};
+		049A32C82DEC6A5A00D4185B /* Exceptions for "fcst_example" folder in "fcst_example" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 040A717D2DCFA53D00A5861B /* fcst_example */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		040A71802DCFA53D00A5861B /* fcst_example */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				040A71A62DCFA53E00A5861B /* Exceptions for "fcst_example" folder in "fcst_example" target */,
+				049A32C82DEC6A5A00D4185B /* Exceptions for "fcst_example" folder in "fcst_example" target */,
 			);
 			path = fcst_example;
 			sourceTree = "<group>";
 		};
 		040A71972DCFA53E00A5861B /* fcst_exampleTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = fcst_exampleTests;
 			sourceTree = "<group>";
 		};
 		040A71A12DCFA53E00A5861B /* fcst_exampleUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = fcst_exampleUITests;
 			sourceTree = "<group>";
 		};
@@ -406,9 +402,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-fcst_example/Pods-fcst_example-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-fcst_example/Pods-fcst_example-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -803,7 +803,6 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = fcstWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = fcstWidget;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -832,7 +831,6 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = fcstWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = fcstWidget;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
