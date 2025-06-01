@@ -1,0 +1,6 @@
+module Pods_fcst_example {
+  umbrella header "Pods-fcst_example-umbrella.h"
+
+  export *
+  module * { export * }
+}
