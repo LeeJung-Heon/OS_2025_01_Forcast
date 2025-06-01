@@ -70,13 +70,29 @@ class WeatherBasicViewController: UIViewController, CLLocationManagerDelegate {
     @IBOutlet weak var pm10Label: UILabel!
     @IBOutlet weak var pm25Label: UILabel!
     
+    // MARK: 새로고침 버튼
+    @IBAction func didTapRefreshButton(_ sender: UIButton){
+        activityIndicator.startAnimating() // 시작
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.setupTimeStrings()
+            self.fetchForecast(type: .ultraSrtFcst)
+            self.fetchForecast(type: .vilageFcst)
+            self.fetchDustData()
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                self.activityIndicator.stopAnimating() // 종료
+            }
+        }
+    }
+    
     // MARK: - API Endpoints & Key
     private let apiKey = "2zW746AAjo7EZoz%2BfMGDR%2BSAFlZ0GZYElOs3oJ35izgQtYuGY3uN4h5Rs2KAX9FlJbGH9ogMa6xqvFfp%2FXC1yQ%3D%3D"
     private let ultraSrtFcstUrl = "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst?"
     private let vilageFcstUrl   = "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?"
     
     private let fineDustKey   = "2zW746AAjo7EZoz%2BfMGDR%2BSAFlZ0GZYElOs3oJ35izgQtYuGY3uN4h5Rs2KAX9FlJbGH9ogMa6xqvFfp%2FXC1yQ%3D%3D"
-    private let fineDustURL   = "https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRItmMesureDnsty?"
+    private let fineDustURL   = "https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty?"
     
     // MARK: - Properties
     private var locationManager: CLLocationManager!
@@ -96,6 +112,10 @@ class WeatherBasicViewController: UIViewController, CLLocationManagerDelegate {
     private var fstTimeString  = ""
     private var ultraTimer: Timer?
     private var dailyTimer: Timer?
+    
+    // 새로고침 인디케이터
+    var activityIndicator = UIActivityIndicatorView(style: .medium)
+
     
     // gif를 넣기위한 이미지 배열
     private var weatherGifImageViews: [UIImageView] = []
@@ -117,7 +137,15 @@ class WeatherBasicViewController: UIViewController, CLLocationManagerDelegate {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("✅ viewDidLoad 진입")
+        //print("✅ pm10Label 연결 확인: \(pm10Label != nil)")
+        
+        // 새로고침 인디케이터
+        activityIndicator.center = view.center
+        activityIndicator.hidesWhenStopped = true
+        view.addSubview(activityIndicator)
+        
+        DispatchQueue.main.async {
+        }
         setupLocationManager()
         
         // 사용하지 않을 라벨들 임시적으로 제거
@@ -154,7 +182,7 @@ class WeatherBasicViewController: UIViewController, CLLocationManagerDelegate {
             
                 
             // 우측 상단에 gif 고정
-            gifImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 98),
+            gifImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 82),
             gifImageView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
             gifImageView.widthAnchor.constraint(equalToConstant: 100),
             gifImageView.heightAnchor.constraint(equalToConstant: 100)
@@ -177,6 +205,7 @@ class WeatherBasicViewController: UIViewController, CLLocationManagerDelegate {
         gifImageView.animationDuration = TimeInterval(frameCount) * 0.05 // 0.05는 임의의 값
         gifImageView.animationRepeatCount = 0
         gifImageView.startAnimating()
+        
     }
     
     // MARK: - gif를 날씨에 맞게 출력
@@ -353,7 +382,7 @@ class WeatherBasicViewController: UIViewController, CLLocationManagerDelegate {
     //MARK: - alamofire로 dust 데이터 요청
     private func fetchDustData() {
         let url = buildUrlForDust() // sidoName 포함되어 있어야 함
-        print("요청 URL: \(url)")
+        
         //print("api에 넘길 sido 이름: " + self?.currentSidoName)
 
         // 시도 이름별 대표 측정소 이름 매핑
@@ -365,7 +394,7 @@ class WeatherBasicViewController: UIViewController, CLLocationManagerDelegate {
             "광주": "북구",
             "대전": "서구",
             "울산": "남구",
-            "경기": "수원시",
+            "경기": "수지",
             "강원": "춘천",
             "충북": "청주시",
             "충남": "천안시",
@@ -385,7 +414,7 @@ class WeatherBasicViewController: UIViewController, CLLocationManagerDelegate {
             return
         }
         
-        //print("✅ currentSidoName: \(currentSidoName ?? "없음")")
+        print("✅ currentSidoName: \(currentSidoName ?? "없음")")
 
         AF.request(url).responseData { response in
             switch response.result {
@@ -398,8 +427,8 @@ class WeatherBasicViewController: UIViewController, CLLocationManagerDelegate {
                     // 해당 대표 측정소 필터링
                     if let selectedItem = items.first(where: { $0.stationName == mainStation }) {
                         DispatchQueue.main.async {
-                            self.pm10Label.text = "미세먼지(PM10): \(selectedItem.pm10Value ?? "-") ㎍/㎥"
-                            self.pm25Label.text = "초미세먼지(PM2.5): \(selectedItem.pm25Value ?? "-") ㎍/㎥"
+                            self.pm10Label.text = "PM10: \(selectedItem.pm10Value ?? "-") ㎍/㎥"
+                            self.pm25Label.text = "PM2.5: \(selectedItem.pm25Value ?? "-") ㎍/㎥"
                             //self.stationLabel.text = "측정소: \(selectedItem.stationName ?? "-")"
                         }
                     } else {
@@ -445,23 +474,20 @@ class WeatherBasicViewController: UIViewController, CLLocationManagerDelegate {
 
     // MARK: - 미세먼지 URL 제작
     private func buildUrlForDust() -> String {
-        // 전달할 API에 넘길 URL 만들 때 엔드포인트 + 값들 + ..
         let base = fineDustURL
         
-        guard let sidoName = currentSidoName else {
-            return ""}
-        
-        // base를 이용해서 URL만드는 부분
-            var url = base + "serviceKey=" + fineDustKey
-            url += "&returnType=JSON&numOfRows=100&pageNo=1"
-            url += "&sidoName=\(sidoName)"
-            url += "&ver=1.0"
-            //print("요청 URL: \(url)")
-        print("✅ fineDustURL: \(fineDustURL)")
-        print("✅ fineDustKey: \(fineDustKey)")
-        print("✅ currentSidoName: \(currentSidoName ?? "없음")")
-            return url
+        /// 시도 이름만 인코딩 처리
+        guard let sidoName = currentSidoName?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            return ""
         }
+
+        var url = base + "serviceKey=" + fineDustKey
+        url += "&returnType=JSON&numOfRows=100&pageNo=1"
+        url += "&sidoName=\(sidoName)"
+        url += "&ver=1.0"
+        print("✅ 요청 URL: \(url)") // 🔍 진짜 요청 URL 출력
+        return url
+    }
         
     // MARK: - 필터링
         
@@ -514,6 +540,7 @@ class WeatherBasicViewController: UIViewController, CLLocationManagerDelegate {
     // async 는 지금 바로 실행하는게 아니라 나중에 실행 예약 -> UI 에선 이 작업 필수!!
     private func updateUltraSrtUI(with items: [ResponseGetWeather.Item]) {
         DispatchQueue.main.async {
+            //print("📍 메인 스레드에서 출력 확인")
             
             // 1~5시간 후를 위한 라벨들을 배열로 구성
             let hourLater = [self.one_hourLater, self.two_hourLater, self.three_hourLater, self.four_hourLater,self.five_hourLater]
@@ -567,7 +594,7 @@ class WeatherBasicViewController: UIViewController, CLLocationManagerDelegate {
                         if ["1", "5", "6"].contains(pty) {
                             imageName = "rain" // 비, 빗눈 등
                         } else if ["2", "3", "7"].contains(pty) {
-                            imageName = "snow" // 눈, 소나기 등
+                            imageName = "snow" // 눈
                         } else {
                             // PTY가 0일 때 SKY 값으로 판단
                             switch sky {
@@ -604,7 +631,8 @@ class WeatherBasicViewController: UIViewController, CLLocationManagerDelegate {
 
                 // 시간별 PTY 값 배열 (최대 5개)
                 let ptyValues = ptyItems.prefix(5).compactMap { Int($0.fcstValue ?? "0") }
-
+                //let ptyValues = [0, 1, 0, 0, 0] // 알림 테스트 데이터 -> 시뮬레이터에선 실행 x
+                
                 if ptyValues.count >= 2 {
                     let firstPTY = ptyValues[0] // 1시간 후
                     for i in 1..<ptyValues.count {
