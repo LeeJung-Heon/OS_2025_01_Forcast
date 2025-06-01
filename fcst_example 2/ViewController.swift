@@ -540,29 +540,38 @@ class WeatherBasicViewController: UIViewController, CLLocationManagerDelegate {
     // async 는 지금 바로 실행하는게 아니라 나중에 실행 예약 -> UI 에선 이 작업 필수!!
     private func updateUltraSrtUI(with items: [ResponseGetWeather.Item]) {
         DispatchQueue.main.async {
-            //print("📍 메인 스레드에서 출력 확인")
-            
-            // 1~5시간 후를 위한 라벨들을 배열로 구성
             let hourLater = [self.one_hourLater, self.two_hourLater, self.three_hourLater, self.four_hourLater,self.five_hourLater]
             let weatherIcons = [self.one_weatherIcon, self.two_weatherIcon, self.three_weatherIcon, self.four_weatherIcon, self.five_weatherIcon]
             let tempLabels = [self.one_tempLbl, self.two_tempLbl, self.three_tempLbl, self.four_tempLbl, self.five_tempLbl]
             let ptyLabels = [self.one_precipitationLbl, self.two_precipitationLbl, self.three_precipitationLbl, self.four_precipitationLbl, self.five_precipitationLbl]
             let wsdLabels = [self.one_windSpeedLbl, self.two_windSpeedLbl, self.three_windSpeedLbl, self.four_windSpeedLbl, self.five_windSpeedLbl]
             let skyLabels = [self.one_skyLbl, self.two_skyLbl, self.three_skyLbl, self.four_skyLbl, self.five_skyLbl]
-            
-            // 위젯에 넘길 데이터(기온,풍속, 이미지 이름(강수형태, 하늘상태 조합)
             let hourKeys = ["one", "two", "three", "four", "five"]
-            
-            // 시간순 정렬 (fcstTime은 "0700" 형식이므로 정렬 가능)
+
             let sortedItems = items.sorted { ($0.fcstTime ?? "") < ($1.fcstTime ?? "") }
-            
-            // 카테고리별로 아이템 필터
             let t1hItems = sortedItems.filter { $0.category == "T1H" }
             let ptyItems = sortedItems.filter { $0.category == "PTY" }
             let wsdItems = sortedItems.filter { $0.category == "WSD" }
             let skyItems = sortedItems.filter { $0.category == "SKY" }
-            
-            // 최대 5개까지만 각 label에 매칭
+
+            // 알림 기능 호출
+            //let ptyValues = ptyItems.prefix(5).compactMap { Int($0.fcstValue ?? "0") }
+            let ptyValues = [0, 1, 0, 0, 0] // 알림 테스트 데이터 -> 시뮬레이터에선 실행 x
+            if ptyValues.count >= 2 {
+                let firstPTY = ptyValues[0]
+                for i in 1..<ptyValues.count {
+                    let futurePTY = ptyValues[i]
+                    if firstPTY == 0 && futurePTY != 0 {
+                        if !UserDefaults.standard.bool(forKey: "rainAlertSent") {
+                            self.sendRainNotification(in: i + 1)
+                            UserDefaults.standard.set(true, forKey: "rainAlertSent")
+                        }
+                        break
+                    }
+                }
+            }
+
+            // 이후 UI 업데이트 루프
             for i in 0..<5 {
                 hourLater[i]?.text = String(i+1)+"시간 +"
                 if i < t1hItems.count {
@@ -577,75 +586,44 @@ class WeatherBasicViewController: UIViewController, CLLocationManagerDelegate {
                 if i < skyItems.count {
                     skyLabels[i]?.text = "하늘상태: \(skyItems[i].fcstValue ?? "")"
                 }
-                
-                // 1시간 데이터를 main 라벨에 넣는다
+
                 self.main_tempLbl.text = "\(t1hItems[0].fcstValue ?? "")°"
-                
                 let temp = tempLabels[i]?.text ?? ""
                 let wind = wsdLabels[i]?.text ?? ""
-                
-                // 기상에 따라서 이미지 넣기
+
                 if i < ptyItems.count && i < skyItems.count {
-                        let pty = ptyItems[i].fcstValue ?? ""
-                        let sky = skyItems[i].fcstValue ?? ""
+                    let pty = ptyItems[i].fcstValue ?? ""
+                    let sky = skyItems[i].fcstValue ?? ""
 
-                        var imageName: String = ""
-
-                        if ["1", "5", "6"].contains(pty) {
-                            imageName = "rain" // 비, 빗눈 등
-                        } else if ["2", "3", "7"].contains(pty) {
-                            imageName = "snow" // 눈
-                        } else {
-                            // PTY가 0일 때 SKY 값으로 판단
-                            switch sky {
-                            case "1":
-                                imageName = "sunny" // 맑음
-                            case "3":
-                                imageName = "cloudy" // 구름많음
-                            case "4":
-                                imageName = "fog" // 흐림
-                            default:
-                                imageName = "sunny" // 기본값은 맑음
-                            }
+                    var imageName = ""
+                    if ["1", "5", "6"].contains(pty) {
+                        imageName = "rain"
+                    } else if ["2", "3", "7"].contains(pty) {
+                        imageName = "snow"
+                    } else {
+                        switch sky {
+                        case "1": imageName = "sunny"
+                        case "3": imageName = "cloudy"
+                        case "4": imageName = "fog"
+                        default:  imageName = "sunny"
                         }
+                    }
 
-                        weatherIcons[i]?.image = UIImage(named: imageName)
-                    
-                    
-                    // UserDefaults에 저장하고, key이름은 one_temp, one_wind 형식
+                    weatherIcons[i]?.image = UIImage(named: imageName)
+
                     let keyPrefix = hourKeys[i]
                     self.sharedDefaults?.set(temp, forKey: "\(keyPrefix)_temp")
                     self.sharedDefaults?.set(wind, forKey: "\(keyPrefix)_wind")
                     self.sharedDefaults?.set(imageName, forKey: "\(keyPrefix)_imageName")
-                    
-                    // 1시간 후의 데이터를 상단에 표시
+
                     if i == 0 {
                         self.updateWeatherGIF(pty: pty, sky: sky)
-                    }
-                    
-                }
-
-                
-                // PTY 항목을 가져옴
-                let ptyItems = sortedItems.filter { $0.category == "PTY" }
-
-                // 시간별 PTY 값 배열 (최대 5개)
-                let ptyValues = ptyItems.prefix(5).compactMap { Int($0.fcstValue ?? "0") }
-                //let ptyValues = [0, 1, 0, 0, 0] // 알림 테스트 데이터 -> 시뮬레이터에선 실행 x
-                
-                if ptyValues.count >= 2 {
-                    let firstPTY = ptyValues[0] // 1시간 후
-                    for i in 1..<ptyValues.count {
-                        let futurePTY = ptyValues[i]
-                        if firstPTY == 0 && futurePTY != 0 {
-                            self.sendRainNotification(in: i + 1) // i+1 시간 후 비 예보
-                            break
-                        }
                     }
                 }
             }
         }
     }
+
 
 
     private func updateVilageUI(with items: [ResponseGetWeather.Item]) {
